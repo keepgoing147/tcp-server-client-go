@@ -28,7 +28,13 @@ func main() {
 	fmt.Println("Starting server...")
 
 	src := *addr + ":" + strconv.Itoa(*port)
-	listener, _ := net.Listen("tcp", src)
+	listener, err := net.Listen("tcp", src)
+
+	if err != nil {
+		fmt.Println("(Error)", err.Error())
+		return
+	}
+
 	fmt.Printf("Listening on %s.\n", src)
 
 	defer listener.Close()
@@ -39,6 +45,7 @@ func main() {
 			fmt.Printf("Some connection error: %s\n", err)
 		}
 
+		// TCP server can accept multiple connections at the same time.
 		go handleConnection(conn)
 	}
 }
@@ -74,9 +81,10 @@ func handleMessage(message string, conn net.Conn) {
 
 		case message == "/quit":
 			fmt.Println("Quitting.")
+			return
+
+		case message == "/shutdown":
 			conn.Write([]byte("I'm shutting down now.\n"))
-			fmt.Println("< " + "%quit%")
-			conn.Write([]byte("%quit%\n"))
 			os.Exit(0)
 
 		default:
